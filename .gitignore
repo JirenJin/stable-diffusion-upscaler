@@ -1,3 +1,15 @@
+# Downloaded models
+cache/
+taming/
+
+# Cloned github repos
+latent-diffusion/
+stable-diffusion/
+taming-transformers/
+
+# Ignore generated images.
+*.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

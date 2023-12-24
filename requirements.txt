@@ -1,0 +1,15 @@
+torch
+torchvision
+Pillow
+ftfy
+einops
+braceexpand
+requests
+transformers==4.31.0
+clip
+omegaconf
+pytorch-lightning
+kornia
+k-diffusion==0.0.15
+diffusers
+git+https://github.com/huggingface/huggingface_hub
