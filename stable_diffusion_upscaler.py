@@ -23,6 +23,12 @@ def parse_arguments():
     )
     parser.add_argument("--seed", type=int, help="Seed for image generation")
     parser.add_argument(
+        "--num_outputs",
+        type=int,
+        default=1,
+        help="Number of output images to genearte.",
+    )
+    parser.add_argument(
         "--prompt",
         type=str,
         help="Text prompt for image generation",
@@ -93,7 +99,7 @@ def parse_arguments():
 
 
 @torch.no_grad()
-def run(args):
+def run(args, vae, model_up, tok_up, text_encoder_up, sd_latent_generator):
     prompt = args.prompt
     steps = args.steps
     guidance_scale = args.guidance_scale
@@ -117,8 +123,6 @@ def run(args):
     print(f"Generating with seed={seed}")
     seed_everything(seed)
 
-    vae, model_up, tok_up, text_encoder_up = get_models()
-
     # Generate the text embeddings for the prompt used in upscaling.
     @torch.no_grad()
     def condition_up(prompts):
@@ -128,7 +132,6 @@ def run(args):
     c = condition_up(batch_size * [prompt])
 
     # Generate the low-resolution latents.
-    sd_latent_generator = SdLatentGenerator()
 
     low_res_latent = sd_latent_generator.generate_latent(
         prompt, batch_size, steps, guidance_scale
@@ -236,12 +239,17 @@ def run(args):
             )
             image_id += 1
 
+        print(f"Generated image for prompt: {prompt}, with seed: {seed}")
+
 
 def main():
     args = parse_arguments()
-    run(args)
 
-    print(f"Generating image for prompt: {args.prompt} with seed: {args.seed}")
+    vae, model_up, tok_up, text_encoder_up = get_models()
+    sd_latent_generator = SdLatentGenerator()
+
+    for _ in range(args.num_outputs):
+        run(args, vae, model_up, tok_up, text_encoder_up, sd_latent_generator)
 
 
 if __name__ == "__main__":
