@@ -17,7 +17,6 @@ from models import CFGUpscaler, SdLatentGenerator, get_models
 from utils import save_image
 
 
-# Function to parse command line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Stable Diffusion Image Generation Script"
@@ -238,7 +237,6 @@ def run(args):
             image_id += 1
 
 
-# Main function
 def main():
     args = parse_arguments()
     run(args)
