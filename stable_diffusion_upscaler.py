@@ -46,6 +46,68 @@ def parse_arguments():
             "the temple of fire by Ross Tran and Gerardo Dottori, oil on canvas"
         ),
     )
+    parser.add_argument(
+        "-n", "--num-samples", type=int, default=1, help="Number of samples"
+    )
+    parser.add_argument(
+        "-b", "--batch-size", type=int, default=1, help="Batch size"
+    )
+    parser.add_argument(
+        "-g", "--guidance-scale", type=float, default=7.5, help="Guidance scale"
+    )
+    parser.add_argument(
+        "-a",
+        "--noise-aug-level",
+        type=float,
+        default=0,
+        help="Noise augmentation level",
+    )
+    parser.add_argument(
+        "-t",
+        "--noise-aug-type",
+        type=str,
+        default="gaussian",
+        choices=["gaussian", "fake"],
+        help="Noise augmentation type",
+    )
+    parser.add_argument(
+        "-s",
+        "--sampler",
+        type=str,
+        default="k_dpm_adaptive",
+        choices=[
+            "k_euler",
+            "k_euler_ancestral",
+            "k_dpm_2_ancestral",
+            "k_dpm_fast",
+            "k_dpm_adaptive",
+        ],
+        help="Sampler settings",
+    )
+    parser.add_argument(
+        "-st", "--steps", type=int, default=50, help="Number of steps"
+    )
+    parser.add_argument(
+        "-ts",
+        "--tol-scale",
+        type=float,
+        default=0.25,
+        help="Error tolerance scale",
+    )
+    parser.add_argument(
+        "-e",
+        "--eta",
+        type=float,
+        default=1.0,
+        help="Amount of noise to add per step",
+    )
+    parser.add_argument(
+        "-q",
+        "--SD-Q",
+        type=float,
+        default=0.18215,
+        help="Scaling for latents in first stage models",
+    )
     return parser.parse_args()
 
 
@@ -291,31 +353,25 @@ def condition_up(prompts):
 
 
 @torch.no_grad()
-def run(seed, prompt):
-    num_samples = 1
-    batch_size = 1
-
-    guidance_scale = 1  # min: 0.0, max: 10.0, step:0.5
-
-    noise_aug_level = 0  # min: 0.0, max: 0.6, step:0.025
-    noise_aug_type = "gaussian"  # ["gaussian", "fake"]
-
-    # Sampler settings. `k_dpm_adaptive` uses an adaptive solver with error tolerance `tol_scale`, all other use a fixed number of steps.
-    sampler = (  # ["k_euler", "k_euler_ancestral", "k_dpm_2_ancestral", "k_dpm_fast", "k_dpm_adaptive"]
-        "k_dpm_adaptive"
-    )
-    steps = 50
-    tol_scale = 0.25
-    # Amount of noise to add per step (0.0=deterministic).
-    # Used in all samplers except `k_euler`.
-    eta = 1.0
-
-    SD_Q = 0.18215  # sd_model.scale_factor; scaling for latents in first stage models
+def run(args):
+    prompt = args.prompt
+    steps = args.steps
+    batch_size = args.batch_size
+    guidance_scale = args.guidance_scale
+    noise_aug_level = args.noise_aug_level
+    noise_aug_type = args.noise_aug_type
+    sampler = args.sampler
+    num_samples = args.num_samples
+    eta = args.eta
+    tol_scale = args.tol_scale
+    SD_Q = args.SD_Q
 
     timestamp = int(time.time())
-    if seed is None:
+    if args.seed is None:
         print("No seed was provided, using the current time.")
         seed = timestamp
+    else:
+        seed = args.seed
     print(f"Generating with seed={seed}")
     seed_everything(seed)
 
@@ -348,8 +404,6 @@ def run(seed, prompt):
 
     height = 512  # default height of Stable Diffusion
     width = 512  # default width of Stable Diffusion
-    guidance_scale = 7.5  # Scale for classifier-free guidance
-    batch_size = 1
 
     text_input = tokenizer(
         prompt,
@@ -515,7 +569,7 @@ def run(seed, prompt):
 # Main function
 def main():
     args = parse_arguments()
-    run(args.seed, args.prompt)
+    run(args)
 
     print(f"Generating image for prompt: {args.prompt} with seed: {args.seed}")
 
